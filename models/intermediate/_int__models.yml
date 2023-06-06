@@ -2,3 +2,7 @@ version: 2
 
 models:
   - name: dim_account
+  - name: dim_location
+  - name: dim_opportunity_detail
+  - name: dim_date
+  - name: fct_opportunity
