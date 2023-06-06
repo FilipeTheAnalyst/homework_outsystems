@@ -1,17 +1,3 @@
-{{ config(
-    materialized='view',
-    pre_hook='UPDATE {{ this }} AS t1
-SET t1.region_c_c = t2.region_c_c
-FROM (
-    SELECT country_c, MAX(region_c_c) AS region_c_c
-    FROM {{ this }}
-    WHERE region_c_c IS NOT NULL
-    GROUP BY country_c
-) AS t2
-WHERE t1.country_c = t2.country_c
-AND t1.region_c_c IS NULL'
-) }}
-
 with
 
 opportunity as (
@@ -20,42 +6,49 @@ opportunity as (
 
 ),
 
-final as (
+cte AS (
+  SELECT COUNTRY_C, MAX(REGION_C_C) AS REGION_C_C, MAX(SALES_TERRITORY_C) AS SALES_TERRITORY_C
+  FROM opportunity
+  WHERE REGION_C_C IS NOT NULL AND SALES_TERRITORY_C IS NOT NULL
+  GROUP BY COUNTRY_C
+),
 
-    select
-        id as opportunity_id,
-        is_deleted as is_deleted,
-        CASE
-            WHEN account_id is null THEN 'N/A'
-            ELSE account_id
-        END as account_id,
-        stage_name,
-        CASE
-            WHEN stage_name = 'Closed Lost' THEN '100%'
-            ELSE SUBSTRING(stage_name,CHARINDEX('(', stage_name) + 1,CHARINDEX(')', stage_name) - CHARINDEX('(', stage_name) - 1)
-        END AS stage_conclusion_pctg,
-        close_date,
-        CASE    
-            WHEN lead_source is null THEN 'Unknown'
-            ELSE lead_source
-        END AS lead_source,
-        is_closed,
-        is_won,
-        DATE(created_date) as created_date,
-        CASE
-            WHEN country_c is null THEN 'Undefined'
-            ELSE country_c
-        END AS country,
-        CASE
-            WHEN region_c_c is null THEN 'Undefined'
-            ELSE region_c_c
-        END AS region,
-        sales_territory_c as sales_territory,
-        IFF(is_new_logo_c='Yes', True, False) as is_new_logo
-
-        
-    from opportunity
-
+final as 
+(
+SELECT
+  t.ID AS opportunity_id,
+  t.IS_DELETED,
+  CASE
+        WHEN t.account_id is null THEN 'N/A'
+        ELSE t.account_id
+  END as account_id,
+  t.STAGE_NAME,
+  CASE
+            WHEN t.stage_name = 'Closed Lost' THEN '100%'
+            ELSE SUBSTRING(t.stage_name,CHARINDEX('(', t.stage_name) + 1,CHARINDEX(')', t.stage_name) - CHARINDEX('(', t.stage_name) - 1)
+    END AS stage_conclusion_pctg,
+  t.CLOSE_DATE,
+  CASE    
+        WHEN t.lead_source is null THEN 'Unknown'
+        ELSE t.lead_source
+    END AS lead_source,
+  t.IS_CLOSED,
+  t.IS_WON,
+  DATE(t.CREATED_DATE) AS created_date,
+  CASE
+      WHEN t.COUNTRY_C is null THEN 'Undefined'
+      ELSE t.country_c
+    END as country,
+CASE
+    WHEN COALESCE(t.REGION_C_C, cte.REGION_C_C) is null THEN 'Undefined'
+    ELSE COALESCE(t.REGION_C_C, cte.REGION_C_C)
+END AS region,
+  t.TYPE_C AS customer_type,
+  COALESCE(t.SALES_TERRITORY_C, cte.SALES_TERRITORY_C) AS sales_territory,
+  IFF(t.is_new_logo_c='Yes', True, False) as is_new_logo
+FROM opportunity AS t
+LEFT JOIN cte ON t.COUNTRY_C = cte.COUNTRY_C
 )
+
 
 select * from final
