@@ -63,11 +63,11 @@ opportunity as
     dim_opportunity_detail.is_won as opportunity_is_won,
     dim_opportunity_detail.is_new_logo as opportunity_is_new_logo,
     dim_opportunity_detail.customer_type,
-    dim_date.date_day,
-    dim_date.year,
-    dim_date.year_month,
-    dim_date.month,
-    dim_date.is_weekend
+    dim_date.date_day as closed_date,
+    dim_date.year as closed_year,
+    dim_date.year_month as closed_year_month,
+    dim_date.month as closed_month,
+    dim_date.is_weekend as closed_is_weekend
     
     from fct_opportunity
 
@@ -75,7 +75,7 @@ opportunity as
         on fct_opportunity.account_id = dim_account.account_id
 
     left join dim_date 
-        on fct_opportunity.created_date = dim_date.date_id
+        on fct_opportunity.closed_date = dim_date.date_id
 
     left join dim_location
         on fct_opportunity.location_id = dim_location.location_id
