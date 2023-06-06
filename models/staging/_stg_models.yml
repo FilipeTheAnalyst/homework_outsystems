@@ -1,0 +1,5 @@
+version: 2
+
+models:
+  - name: stg_sales__account
+  - name: stg_sales__opportunity

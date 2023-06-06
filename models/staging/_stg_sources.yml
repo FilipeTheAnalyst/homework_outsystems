@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: sales
+    database: candidate
+    schema: exercisedata
+    tables:
+      - name: account
+      - name: opportunity
