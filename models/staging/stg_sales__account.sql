@@ -36,6 +36,18 @@ final as (
 
     from account
 
+    UNION
+
+    select
+
+    'N/A' as account_id,
+    TRUE as is_deleted,
+    'Unknown' as company_type,
+    'Unknown' as company_industry,
+    -1 as number_of_employees,
+    FALSE as is_no_of_employees_valid,
+    date(current_timestamp()) as created_date,
+    'Undefined' as company_size
 
 )
 
